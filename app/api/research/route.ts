@@ -13,13 +13,20 @@ export async function POST(request: Request) {
   const { query, sources = [], is_living = false, blueprint_id } = await request.json()
   if (!query?.trim()) return NextResponse.json({ error: 'Query is required' }, { status: 400 })
 
-  // Fire Inngest event (async, for observability + retries)
-  await inngest.send({
-    name: 'along/research.requested',
-    data: { blueprint_id, query, sources, is_living, user_id: user.id },
-  })
+  // Fire Inngest event for observability + living dataset retries
+  // Skip gracefully if INNGEST_EVENT_KEY not configured (local dev)
+  if (process.env.INNGEST_EVENT_KEY) {
+    try {
+      await inngest.send({
+        name: 'along/research.requested',
+        data: { blueprint_id, query, sources, is_living, user_id: user.id },
+      })
+    } catch (e) {
+      console.warn('Inngest send skipped:', e)
+    }
+  }
 
-  // Also run inline for immediate triage UI response (Inngest handles retries/living)
+  // Run Claude inline for immediate triage UI response
   // We call Claude directly here so the user sees results without polling
   const Anthropic = (await import('@anthropic-ai/sdk')).default
   const anthropic = process.env.ANTHROPIC_API_KEY
