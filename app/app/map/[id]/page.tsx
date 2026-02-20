@@ -2,13 +2,19 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import MapShell from '@/components/map/MapShell'
 
-export default async function MapPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function MapPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ reveal?: string }>
+}) {
   const { id } = await params
+  const { reveal } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Verify the blueprint exists and belongs to this user
   const { data: bp } = await supabase
     .from('blueprints')
     .select('id, metadata')
@@ -20,7 +26,7 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
 
   return (
     <main className="relative w-screen h-screen overflow-hidden bg-black">
-      <MapShell />
+      <MapShell reveal={reveal === 'true'} />
     </main>
   )
 }
