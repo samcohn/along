@@ -38,9 +38,18 @@ export async function PATCH(request: Request, { params }: Params) {
 
   const body = await request.json()
 
+  // Only update known schema columns — artifact_type lives inside metadata JSONB
+  const { artifact_type, metadata, story_intent, bounding_context } = body
+  const safeUpdate: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  if (story_intent) safeUpdate.story_intent = story_intent
+  if (bounding_context) safeUpdate.bounding_context = bounding_context
+  if (metadata || artifact_type) {
+    safeUpdate.metadata = { ...(metadata ?? {}), ...(artifact_type ? { artifact_type } : {}) }
+  }
+
   const { data, error } = await supabase
     .from('blueprints')
-    .update({ ...body, updated_at: new Date().toISOString() })
+    .update(safeUpdate)
     .eq('id', id)
     .eq('owner_id', user.id)
     .select()

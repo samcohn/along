@@ -160,7 +160,7 @@ function PlaceSearch({ onAdd }: { onAdd: (loc: Location) => void }) {
 // ─── Main Panel ───────────────────────────────────────────────────────────────
 
 export default function BuildingPanel() {
-  const { activePanel, setActivePanel } = useMapStore()
+  const { activePanel, setActivePanel, activeArtifactType } = useMapStore()
   const {
     locations, addLocation, removeLocation,
     isFetchingSuggestions, setSuggestions, setIsFetchingSuggestions,
@@ -180,6 +180,7 @@ export default function BuildingPanel() {
           destination,
           intent: 'trip planning',
           existing_locations: locations,
+          artifact_type: activeArtifactType,
         }),
       })
       const data = await res.json()
