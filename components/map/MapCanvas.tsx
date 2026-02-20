@@ -16,7 +16,7 @@ const SKY_LAYERS: Record<string, object> = {
   dusk:     { 'sky-type': 'gradient',   'sky-gradient': ['interpolate', ['linear'], ['sky-radial-progress'], 0.8, 'rgba(135, 100, 80, 1.0)', 1, 'rgba(0, 0, 0, 1.0)'], 'sky-gradient-center': [0, 90] },
   dawn:     { 'sky-type': 'gradient',   'sky-gradient': ['interpolate', ['linear'], ['sky-radial-progress'], 0.8, 'rgba(180, 140, 100, 1.0)', 1, 'rgba(20, 10, 30, 1.0)'], 'sky-gradient-center': [0, 90] },
   overcast: { 'sky-type': 'atmosphere', 'sky-atmosphere-sun': [0.0, 90.0], 'sky-atmosphere-sun-intensity': 3 },
-  night:    { 'sky-type': 'atmosphere', 'sky-atmosphere-sun': [0.0, -90.0], 'sky-atmosphere-sun-intensity': 5 },
+  night:    { 'sky-type': 'atmosphere', 'sky-atmosphere-sun': [0.0, 0.5], 'sky-atmosphere-sun-intensity': 1 },
 }
 
 export default function MapCanvas() {
