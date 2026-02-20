@@ -36,7 +36,8 @@ function PlaceSearch({ onAdd }: { onAdd: (loc: Location) => void }) {
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const search = useCallback(async (q: string) => {
     if (q.length < 2) { setPredictions([]); setOpen(false); return }
@@ -58,12 +59,23 @@ function PlaceSearch({ onAdd }: { onAdd: (loc: Location) => void }) {
     debounceRef.current = setTimeout(() => search(val), 300)
   }
 
+  // Use onBlur with a delay so clicks on dropdown items register first
+  function handleBlur() {
+    blurTimeoutRef.current = setTimeout(() => setOpen(false), 150)
+  }
+
+  function handleFocus() {
+    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current)
+    if (query.length >= 2 && predictions.length > 0) setOpen(true)
+  }
+
   async function handleSelect(prediction: Prediction) {
-    setQuery(prediction.structured_formatting.main_text)
+    // Cancel the blur close so dropdown stays until we're done
+    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current)
     setOpen(false)
     setPredictions([])
+    setQuery(prediction.structured_formatting.main_text)
 
-    // Fetch full place details for coordinates + enrichment
     const res = await fetch(`/api/places?type=details&place_id=${prediction.place_id}`)
     const data: PlaceDetails = await res.json()
     const place = data.result
@@ -95,31 +107,27 @@ function PlaceSearch({ onAdd }: { onAdd: (loc: Location) => void }) {
     setQuery('')
   }
 
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (inputRef.current && !inputRef.current.closest('.place-search')?.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
+  // Cleanup timeouts
+  useEffect(() => () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current)
   }, [])
 
   return (
-    <div className="place-search relative">
+    <div ref={containerRef} className="relative">
       <div className="relative flex items-center">
         <svg className="absolute left-3 text-white/30 pointer-events-none" width="14" height="14" viewBox="0 0 16 16" fill="none">
           <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.5" />
           <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
         <input
-          ref={inputRef}
           type="text"
           value={query}
           onChange={handleChange}
-          onFocus={() => query.length >= 2 && setOpen(true)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           placeholder="Search for a place…"
+          autoComplete="off"
           className="w-full bg-white/8 border border-white/15 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/35 transition"
         />
         {loading && (
@@ -132,15 +140,15 @@ function PlaceSearch({ onAdd }: { onAdd: (loc: Location) => void }) {
 
       {/* Autocomplete dropdown */}
       {open && predictions.length > 0 && (
-        <div className="absolute left-0 right-0 top-full mt-1.5 bg-black/95 backdrop-blur-xl border border-white/15 rounded-xl overflow-hidden z-20 shadow-2xl">
+        <div className="absolute left-0 right-0 top-full mt-1.5 bg-[#111] border border-white/15 rounded-xl overflow-hidden z-50 shadow-2xl">
           {predictions.map((p) => (
             <button
               key={p.place_id}
-              onMouseDown={() => handleSelect(p)}
+              onMouseDown={(e) => { e.preventDefault(); handleSelect(p) }}
               className="w-full flex flex-col px-3 py-2.5 hover:bg-white/8 transition text-left gap-0.5 border-b border-white/5 last:border-0"
             >
-              <span className="text-white text-sm truncate">{p.structured_formatting.main_text}</span>
-              <span className="text-white/40 text-xs truncate">{p.structured_formatting.secondary_text}</span>
+              <span className="text-white text-sm">{p.structured_formatting.main_text}</span>
+              <span className="text-white/40 text-xs">{p.structured_formatting.secondary_text}</span>
             </button>
           ))}
         </div>
