@@ -63,7 +63,8 @@ export default function PromptBar() {
         className={`
           absolute top-6 left-1/2 -translate-x-1/2 z-10
           transition-all duration-300 ease-out
-          ${focused ? 'w-[520px]' : 'w-[380px]'}
+          w-[calc(100vw-32px)] sm:w-[400px] ${focused ? 'sm:w-[520px]' : 'sm:w-[400px]'}
+          max-w-[520px]
           ${triageResults ? 'opacity-50 pointer-events-none' : 'opacity-100'}
         `}
       >

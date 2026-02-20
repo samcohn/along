@@ -48,37 +48,67 @@ export default function TriagePanel({ results, query, onClose }: TriagePanelProp
   }
 
   return (
-    <div className={`
-      hidden lg:flex flex-col absolute right-0 top-0 bottom-0 w-[420px] z-10
-      bg-black/85 backdrop-blur-xl border-l border-white/10
-    `}>
-      {/* Header */}
-      <div className="flex items-start justify-between p-5 border-b border-white/8">
-        <div>
-          <p className="text-white/40 text-xs uppercase tracking-wide mb-1">Research results</p>
-          <h2 className="text-white font-medium text-sm leading-snug max-w-[280px]">"{query}"</h2>
-          <p className="text-white/30 text-xs mt-1">{results.length} places found — review before adding</p>
+    <>
+      {/* Mobile: full-screen overlay */}
+      <div className="lg:hidden fixed inset-0 z-20 flex flex-col bg-black/95 backdrop-blur-xl">
+        {/* Header */}
+        <div className="flex items-start justify-between p-5 border-b border-white/10 flex-shrink-0">
+          <div>
+            <p className="text-white/40 text-xs uppercase tracking-wide mb-1">Research results</p>
+            <h2 className="text-white font-medium text-sm leading-snug max-w-[260px]">&ldquo;{query}&rdquo;</h2>
+            <p className="text-white/30 text-xs mt-1">{results.length} places found — review before adding</p>
+          </div>
+          <button onClick={onClose} className="text-white/30 hover:text-white transition text-2xl leading-none mt-0.5 px-2">×</button>
         </div>
-        <button onClick={onClose} className="text-white/30 hover:text-white transition text-xl leading-none mt-0.5">×</button>
+
+        {/* Accept all */}
+        <div className="px-4 py-3 border-b border-white/10 flex-shrink-0">
+          <button
+            onClick={acceptAll}
+            className="w-full bg-white text-black rounded-xl py-2.5 text-sm font-medium hover:bg-white/90 transition"
+          >
+            Add all {results.length} to map
+          </button>
+        </div>
+
+        {/* Result cards */}
+        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+          {results.map((result) => (
+            <TriageCard key={result.id} result={result} onAccept={() => accept(result)} />
+          ))}
+        </div>
       </div>
 
-      {/* Accept all */}
-      <div className="px-4 py-3 border-b border-white/8">
-        <button
-          onClick={acceptAll}
-          className="w-full bg-white text-black rounded-xl py-2 text-sm font-medium hover:bg-white/90 transition"
-        >
-          Add all {results.length} to map
-        </button>
-      </div>
+      {/* Desktop: side panel */}
+      <div className="hidden lg:flex flex-col absolute right-0 top-0 bottom-0 w-[420px] z-10 bg-black/85 backdrop-blur-xl border-l border-white/10">
+        {/* Header */}
+        <div className="flex items-start justify-between p-5 border-b border-white/8">
+          <div>
+            <p className="text-white/40 text-xs uppercase tracking-wide mb-1">Research results</p>
+            <h2 className="text-white font-medium text-sm leading-snug max-w-[280px]">&ldquo;{query}&rdquo;</h2>
+            <p className="text-white/30 text-xs mt-1">{results.length} places found — review before adding</p>
+          </div>
+          <button onClick={onClose} className="text-white/30 hover:text-white transition text-xl leading-none mt-0.5">×</button>
+        </div>
 
-      {/* Result cards */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
-        {results.map((result) => (
-          <TriageCard key={result.id} result={result} onAccept={() => accept(result)} />
-        ))}
+        {/* Accept all */}
+        <div className="px-4 py-3 border-b border-white/8">
+          <button
+            onClick={acceptAll}
+            className="w-full bg-white text-black rounded-xl py-2 text-sm font-medium hover:bg-white/90 transition"
+          >
+            Add all {results.length} to map
+          </button>
+        </div>
+
+        {/* Result cards */}
+        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+          {results.map((result) => (
+            <TriageCard key={result.id} result={result} onAccept={() => accept(result)} />
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 
