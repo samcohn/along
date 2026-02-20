@@ -12,6 +12,7 @@
     "@anthropic-ai/sdk": "^0.78.0",
     "@deck.gl/layers": "^9.2.8",
     "@deck.gl/react": "^9.2.8",
+    "@mendable/firecrawl-js": "^4.13.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.97.0",
     "@tanstack/react-query": "^5.90.21",
