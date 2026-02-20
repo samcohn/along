@@ -11,6 +11,7 @@ const SuggestionTray   = dynamic(() => import('@/components/panels/SuggestionTra
 const ArtifactSwitcher = dynamic(() => import('./ArtifactSwitcher'), { ssr: false })
 const TripReveal       = dynamic(() => import('./TripReveal'), { ssr: false })
 const BookingPanel     = dynamic(() => import('./BookingPanel'), { ssr: false })
+const MapNav           = dynamic(() => import('./MapNav'), { ssr: false })
 
 interface Props {
   reveal?: boolean
@@ -30,6 +31,7 @@ export default function MapShell({ reveal = false }: Props) {
   return (
     <>
       <MapCanvas />
+      <MapNav />
       <PromptBar />
       <BuildingPanel />
       <SuggestionTray />

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -175,20 +176,25 @@ export default function TripIntake() {
         />
       </div>
 
-      {/* Step counter */}
-      <div className="absolute top-6 right-8 text-white/20 text-xs">
-        {stepIndex + 1} / {STEPS.length}
+      {/* Top bar: back nav */}
+      <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-8 py-5">
+        {stepIndex === 0 ? (
+          <Link
+            href="/app"
+            className="text-white/20 hover:text-white/50 transition text-sm"
+          >
+            ← Along
+          </Link>
+        ) : (
+          <button
+            onClick={() => setStepIndex(i => i - 1)}
+            className="text-white/25 hover:text-white/60 transition text-sm"
+          >
+            ← back
+          </button>
+        )}
+        <span className="text-white/20 text-xs">{stepIndex + 1} / {STEPS.length}</span>
       </div>
-
-      {/* Back button */}
-      {stepIndex > 0 && (
-        <button
-          onClick={() => setStepIndex(i => i - 1)}
-          className="absolute top-5 left-8 text-white/25 hover:text-white/60 transition text-sm"
-        >
-          ← back
-        </button>
-      )}
 
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 max-w-2xl mx-auto w-full">
@@ -276,7 +282,7 @@ export default function TripIntake() {
 
       {/* Answered questions — subtle trail below */}
       {answers.length > 0 && (
-        <div className="flex-shrink-0 px-8 pb-8 flex flex-wrap gap-2 justify-center max-w-2xl mx-auto w-full">
+        <div className="flex-shrink-0 px-8 pb-4 flex flex-wrap gap-2 justify-center max-w-2xl mx-auto w-full">
           {answers.slice(-3).map(a => (
             <div key={a.question_id} className="bg-white/4 border border-white/6 rounded-full px-3 py-1 flex items-center gap-2 max-w-xs">
               <span className="text-white/20 text-[10px] truncate">{a.answer.slice(0, 40)}{a.answer.length > 40 ? '…' : ''}</span>
@@ -284,6 +290,16 @@ export default function TripIntake() {
           ))}
         </div>
       )}
+
+      {/* Escape hatch: blank map */}
+      <div className="flex-shrink-0 pb-8 text-center">
+        <Link
+          href="/app/new/map"
+          className="text-white/15 hover:text-white/35 text-xs transition-colors"
+        >
+          Skip — just open a blank map
+        </Link>
+      </div>
     </div>
   )
 }
