@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import Map, { NavigationControl, GeolocateControl, Marker, Sky } from 'react-map-gl/mapbox'
+import Map, { NavigationControl, GeolocateControl, Marker, Layer } from 'react-map-gl/mapbox'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { useMapStore } from '@/store/map'
 import { useLocationStore } from '@/store/locations'
@@ -10,13 +10,13 @@ import RouteLayer from './RouteLayer'
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!
 
-// Sky gradient configs per type
-const SKY_GRADIENTS = {
-  clear:    { 'sky-type': 'atmosphere' as const, 'sky-atmosphere-sun': [0.0, 90.0] as [number, number], 'sky-atmosphere-sun-intensity': 15 },
-  dusk:     { 'sky-type': 'gradient' as const,   'sky-gradient': ['interpolate', ['linear'], ['sky-radial-progress'], 0.8, 'rgba(135, 100, 80, 1.0)', 1, 'rgba(0, 0, 0, 1.0)'] as unknown[], 'sky-gradient-center': [0, 90] as [number, number] },
-  dawn:     { 'sky-type': 'gradient' as const,   'sky-gradient': ['interpolate', ['linear'], ['sky-radial-progress'], 0.8, 'rgba(180, 140, 100, 1.0)', 1, 'rgba(20, 10, 30, 1.0)'] as unknown[], 'sky-gradient-center': [0, 90] as [number, number] },
-  overcast: { 'sky-type': 'atmosphere' as const, 'sky-atmosphere-sun': [0.0, 90.0] as [number, number], 'sky-atmosphere-sun-intensity': 3 },
-  night:    { 'sky-type': 'atmosphere' as const, 'sky-atmosphere-sun': [0.0, -90.0] as [number, number], 'sky-atmosphere-sun-intensity': 5 },
+// Sky layer specs per mood — used as a Mapbox GL Layer inside the Map
+const SKY_LAYERS: Record<string, object> = {
+  clear:    { 'sky-type': 'atmosphere', 'sky-atmosphere-sun': [0.0, 90.0], 'sky-atmosphere-sun-intensity': 15 },
+  dusk:     { 'sky-type': 'gradient',   'sky-gradient': ['interpolate', ['linear'], ['sky-radial-progress'], 0.8, 'rgba(135, 100, 80, 1.0)', 1, 'rgba(0, 0, 0, 1.0)'], 'sky-gradient-center': [0, 90] },
+  dawn:     { 'sky-type': 'gradient',   'sky-gradient': ['interpolate', ['linear'], ['sky-radial-progress'], 0.8, 'rgba(180, 140, 100, 1.0)', 1, 'rgba(20, 10, 30, 1.0)'], 'sky-gradient-center': [0, 90] },
+  overcast: { 'sky-type': 'atmosphere', 'sky-atmosphere-sun': [0.0, 90.0], 'sky-atmosphere-sun-intensity': 3 },
+  night:    { 'sky-type': 'atmosphere', 'sky-atmosphere-sun': [0.0, -90.0], 'sky-atmosphere-sun-intensity': 5 },
 }
 
 export default function MapCanvas() {
@@ -99,8 +99,12 @@ export default function MapCanvas() {
             'star-intensity': atmo.sky_type === 'night' ? 0.6 : 0.0,
           } : undefined}
         >
-          {/* Sky layer */}
-          <Sky {...SKY_GRADIENTS[atmo.sky_type]} />
+          {/* Sky layer — added as a raw GL layer spec */}
+          <Layer
+            id="sky"
+            type="sky"
+            paint={SKY_LAYERS[atmo.sky_type] as never}
+          />
 
           <NavigationControl position="bottom-right" showCompass={false} />
           <GeolocateControl position="bottom-right" />
