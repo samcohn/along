@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { fetchArtifactForPlace } from '@/lib/artifacts'
 
 // POST /api/trips/build
 // Takes a selected scope + trip intent, generates full day-by-day itinerary,
@@ -179,11 +180,26 @@ Return ONLY valid JSON. Be specific, not generic. Avoid tourist traps unless the
     )
   )
 
-  // ── Persist locations to DB ─────────────────────────────────────────────
+  // ── Fetch Met museum artifacts for each place (in parallel, best-effort) ──
   const geocodedPlaces = allPlaces.filter(p => p.coordinates)
+  const primaryCategories = geocodedPlaces.map(p => p.category[0] ?? 'landmark')
+
+  // Infer culture from destination (simple heuristic — Claude includes country in addresses)
+  const destinationCulture = tripIntent.destination ?? 'European'
+  const artifactResults = await Promise.allSettled(
+    primaryCategories.map((cat) =>
+      fetchArtifactForPlace({ culture: destinationCulture, category: cat })
+        .catch(() => null)
+    )
+  )
+
+  // ── Persist locations to DB ─────────────────────────────────────────────
   await Promise.all(
-    geocodedPlaces.map(place =>
-      supabase.from('locations').insert({
+    geocodedPlaces.map((place, i) => {
+      const artifactResult = artifactResults[i]
+      const artifact = artifactResult.status === 'fulfilled' ? artifactResult.value : null
+
+      return supabase.from('locations').insert({
         id: place.id,
         blueprint_id: blueprint.id,
         name: place.name,
@@ -201,9 +217,19 @@ Return ONLY valid JSON. Be specific, not generic. Avoid tourist traps unless the
           booking_required: place.booking_required,
           source_url: place.source_url,
           fit: place.fit,
+          // Museum artifact for the floating map overlay
+          artifact: artifact
+            ? {
+                objectID: artifact.objectID,
+                imageUrl: artifact.imageUrl,
+                title: artifact.title,
+                objectName: artifact.objectName,
+                metUrl: artifact.metUrl,
+              }
+            : null,
         },
       })
-    )
+    })
   )
 
   // ── Update trip intent with blueprint_id ───────────────────────────────

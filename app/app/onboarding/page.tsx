@@ -1,21 +1,22 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import TripIntake from '@/components/intake/TripIntake'
+import OnboardingShell from '@/components/onboarding/OnboardingShell'
 
-// /app/new — trip intake
-// Uses 2-step short version if taste profile exists (post-onboarding)
-export default async function NewTripPage() {
+export default async function OnboardingPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  // If already completed, skip to dashboard
   const { data: profile } = await supabase
     .from('taste_profiles')
     .select('onboarding_completed')
     .eq('user_id', user.id)
-    .maybeSingle()
+    .single()
 
-  const hasProfile = profile?.onboarding_completed === true
+  if (profile?.onboarding_completed) {
+    redirect('/app')
+  }
 
-  return <TripIntake hasProfile={hasProfile} />
+  return <OnboardingShell />
 }

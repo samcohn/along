@@ -21,9 +21,28 @@ interface Step {
   choices?: { id: string; label: string; sub: string; emoji: string }[]
 }
 
-// ─── The 6 intake steps ───────────────────────────────────────────────────────
+// ─── Steps: 2-step (profile exists) or 6-step (no profile / legacy) ──────────
 
-const STEPS: Step[] = [
+// Short version — shown when user already has a taste profile from onboarding
+const SHORT_STEPS: Step[] = [
+  {
+    id: 'pull',
+    type: 'free_text',
+    question: 'What\'s calling you right now?',
+    subtext: 'A feeling, a craving, a restlessness. Whatever it is.',
+    placeholder: 'I want somewhere that feels...',
+  },
+  {
+    id: 'destination',
+    type: 'destination',
+    question: 'Where?',
+    subtext: 'A city, a country, or even just a direction.',
+    placeholder: 'Tokyo, coastal Portugal, somewhere cold...',
+  },
+]
+
+// Full version — fallback if no profile (should rarely appear after onboarding gate)
+const FULL_STEPS: Step[] = [
   {
     id: 'destination',
     type: 'destination',
@@ -74,8 +93,15 @@ const STEPS: Step[] = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function TripIntake() {
+// Props allow passing profile existence from server component
+interface TripIntakeProps {
+  hasProfile?: boolean
+}
+
+export default function TripIntake({ hasProfile = true }: TripIntakeProps) {
   const router = useRouter()
+  // Use short steps when profile exists (onboarding done), full otherwise
+  const STEPS = hasProfile ? SHORT_STEPS : FULL_STEPS
   const [stepIndex, setStepIndex] = useState(0)
   const [answers, setAnswers] = useState<Answer[]>([])
   const [draft, setDraft] = useState('')

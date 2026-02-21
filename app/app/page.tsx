@@ -7,6 +7,17 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  // Onboarding gate — first-time users must complete the image séance
+  const { data: profile } = await supabase
+    .from('taste_profiles')
+    .select('onboarding_completed')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!profile?.onboarding_completed) {
+    redirect('/app/onboarding')
+  }
+
   const { data: blueprints } = await supabase
     .from('blueprints')
     .select('id, metadata, story_intent, created_at, updated_at')
